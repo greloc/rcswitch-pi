@@ -62,6 +62,8 @@ class RCSwitch {
     void switchOff(char* sGroup, int nSwitchNumber);
     void switchOn(char sFamily, int nGroup, int nDevice);
     void switchOff(char sFamily, int nGroup, int nDevice);
+    void switchOn(char* addressCode);
+    void switchOff(char* addressCode);
 
     void sendTriState(char* Code);
     void send(unsigned long Code, unsigned int length);

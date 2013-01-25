@@ -110,6 +110,24 @@ void RCSwitch::disableTransmit() {
 }
 
 /**
+ * Switch a remote switch on (Type D raw code)
+ *
+ * @param sAddressCode eight char in [1|F|0]
+  */
+void RCSwitch::switchOn(char* sAddressCode) {
+  this->sendTriState( this->getCodeWordD(sAddressCode, true) );
+}
+
+/**
+ * Switch a remote switch off (Type D raw code)
+ *
+ * @param sAddressCode eight char in [1|F|0]
+ */
+void RCSwitch::switchOff(char* sAddressCode) {
+  this->sendTriState( this->getCodeWordD(sAddressCode, false) );
+}
+
+/**
  * Switch a remote switch on (Type C Intertechno)
  *
  * @param sFamily  Familycode (a..f)
