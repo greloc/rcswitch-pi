@@ -16,9 +16,9 @@ int main(int argc, char *argv[]) {
     int PIN = 1;
     
     if (wiringPiSetup () == -1) return 1;
-	printf("receiving\n");
-	RCSwitch mySwitch = RCSwitch();
-	mySwitch.enableReceive(PIN);
+    printf("receiving\n");
+    RCSwitch mySwitch = RCSwitch();
+    mySwitch.enableReceive(PIN);
     
     while (1) {
         if (mySwitch.available()) {

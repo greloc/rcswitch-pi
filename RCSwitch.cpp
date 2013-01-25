@@ -236,6 +236,28 @@ char* RCSwitch::getCodeWordB(int nAddressCode, int nChannelCode, boolean bStatus
    return sReturn;
 }
 
+char* RCSwitch::getCodeWordD(char* sAddressCode, boolean bStatus) {
+   int nReturnPos = 0;
+   static char sReturn[13];
+
+   for (int i = 0; i<8; i++) {
+     sReturn[nReturnPos++] = sAddressCode[i];
+   }
+
+   sReturn[nReturnPos++] = 'F';
+   sReturn[nReturnPos++] = 'F';
+   sReturn[nReturnPos++] = 'F';
+
+   if (bStatus) {
+      sReturn[nReturnPos++] = 'F';
+   } else {
+      sReturn[nReturnPos++] = '0';
+   }
+
+   sReturn[nReturnPos] = '\0';
+
+   return sReturn;
+}
 
 /**
  * Like getCodeWord  (Type A)
