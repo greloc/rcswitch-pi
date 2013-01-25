@@ -23,7 +23,9 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
+#include <sys/time.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "RCSwitch.h"
 
 unsigned long RCSwitch::nReceivedValue = NULL;
@@ -244,12 +246,12 @@ char* RCSwitch::getCodeWordD(char* sAddressCode, boolean bStatus) {
      sReturn[nReturnPos++] = sAddressCode[i];
    }
 
-   sReturn[nReturnPos++] = 'F';
-   sReturn[nReturnPos++] = 'F';
-   sReturn[nReturnPos++] = 'F';
+   sReturn[nReturnPos++] = '1';
+   sReturn[nReturnPos++] = '0';
+   sReturn[nReturnPos++] = '0';
 
    if (bStatus) {
-      sReturn[nReturnPos++] = 'F';
+      sReturn[nReturnPos++] = '0';
    } else {
       sReturn[nReturnPos++] = '0';
    }
@@ -473,6 +475,43 @@ void RCSwitch::sendSync() {
 	}
 }
 
+void RCSwitch::handleInterrupt() {
+
+  static unsigned int duration;
+  static unsigned int changeCount;
+  static unsigned long lastTime;
+  static unsigned int repeatCount;
+
+  struct  timeval    tv;
+  struct  timezone   tz;
+  gettimeofday(&tv, &tz);
+  long time = tv.tv_usec;
+  duration = time - lastTime;
+ 
+  if (duration > 5000 && duration > RCSwitch::timings[0] - 200 && duration < RCSwitch::timings[0] + 200) {
+    repeatCount++;
+    changeCount--;
+    if (repeatCount == 2) {
+      if (receiveProtocol1(changeCount) == false){
+        if (receiveProtocol2(changeCount) == false){
+            printf("protocal: failed!\n");
+        }
+      }
+      repeatCount = 0;
+    }
+    changeCount = 0;
+  } else if (duration > 5000) {
+    changeCount = 0;
+  }
+ 
+  if (changeCount >= RCSWITCH_MAX_CHANGES) {
+    changeCount = 0;
+    repeatCount = 0;
+  }
+  RCSwitch::timings[changeCount++] = duration;
+  lastTime = time;  
+}
+
 /**
  * Enable receiving data
  */
@@ -485,6 +524,9 @@ void RCSwitch::enableReceive() {
   if (this->nReceiverInterrupt != -1) {
     RCSwitch::nReceivedValue = NULL;
     RCSwitch::nReceivedBitlength = NULL;
+    int ret=0;
+    ret = wiringPiISR(this->nReceiverInterrupt, 3, handleInterrupt);
+    printf("interrupt return: %i\n", ret);
   }
 }
 
@@ -527,7 +569,6 @@ unsigned int* RCSwitch::getReceivedRawdata() {
  *
  */
 bool RCSwitch::receiveProtocol1(unsigned int changeCount){
-    
 	  unsigned long code = 0;
       unsigned long delay = RCSwitch::timings[0] / 31;
       unsigned long delayTolerance = delay * RCSwitch::nReceiveTolerance * 0.01;    
